@@ -1,5 +1,20 @@
-use std::fs::read_to_string;
+use std::{collections::HashMap, fs::read_to_string};
 use crate::{AdventDay, AdventReturn};
+
+
+pub struct Foo {
+    one: i32,
+    two: i32
+}
+
+impl Foo {
+    fn update_one(&mut self) {
+        self.one += 1;
+
+        // set two based on one
+        self.two *= &self.one;
+    }
+}
 
 
 pub struct DayOne {
@@ -27,17 +42,17 @@ impl AdventDay for DayOne {
 
     fn process_pt2(&self) -> AdventReturn {
         let (set_one, set_two) = &self.parse();
+        let mut key_sum = HashMap::new();
 
-        println!("set_one: {:?}", set_one);
-        println!("set_two: {:?}", set_two);
+        for i in set_two {
+            key_sum.entry(i).and_modify(|ct| *ct += 1).or_insert(1);
+        }
 
         let score = set_one
             .iter()
             .map(|a| {
-                let ct = set_two.iter().filter(|b| a == *b).count();
-                println!("item: {} | ct: {}", a, ct);
-
-                a * ct as i32
+                let ct = key_sum.get(a).map_or(0, |b| *b);
+                a * ct
             })
             .collect::<Vec<i32>>()
             .iter()
