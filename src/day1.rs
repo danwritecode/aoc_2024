@@ -2,21 +2,6 @@ use std::{collections::HashMap, fs::read_to_string};
 use crate::{AdventDay, AdventReturn};
 
 
-pub struct Foo {
-    one: i32,
-    two: i32
-}
-
-impl Foo {
-    fn update_one(&mut self) {
-        self.one += 1;
-
-        // set two based on one
-        self.two *= &self.one;
-    }
-}
-
-
 pub struct DayOne {
     file_contents: String
 }
