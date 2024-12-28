@@ -1,4 +1,4 @@
-use std::{char::MAX, f32::MIN, fs::read_to_string};
+use std::fs::read_to_string;
 use crate::{AdventDay, AdventReturn};
 
 
@@ -17,9 +17,9 @@ impl AdventDay for DayTwo {
         let mut ct_safe = 0;
 
         for l in lines {
-            match Self::evaluate(l) {
-                Ok(_) => ct_safe += 1,
-                Err(e) => ()
+            match Self::row_is_valid(l) {
+                true => ct_safe += 1,
+                false => ()
             }
         }
 
@@ -31,34 +31,25 @@ impl AdventDay for DayTwo {
         let mut ct_safe = 0;
 
         for l in lines {
-            match Self::evaluate(l) {
-                Ok(_) => ct_safe += 1,
-                Err(idxs) => {
-                    for i in idxs {
+            match Self::row_is_valid(l) {
+                true => ct_safe += 1,
+                false => {
+                    for (i, _) in l.iter().enumerate() {
                         let mut lines_cpy = l.clone();
                         lines_cpy.remove(i); 
 
-                        if let Ok(()) = Self::evaluate(&lines_cpy) {
+                        if let true = Self::row_is_valid(&lines_cpy) {
                             ct_safe += 1;
+                            break;
                         }
                     }
                 }
             }
         }
 
-        // panic!();
         return AdventReturn::Integer(ct_safe);
     }
 
-}
-
-type FailureIndex = usize;
-
-enum FailureIndexPos {
-    Next,
-    Current,
-    CurrentOrNext,
-    None
 }
 
 impl DayTwo {
@@ -71,7 +62,7 @@ impl DayTwo {
         lines
     }
 
-    fn evaluate(row: &Vec<i32>) -> Result<(), Vec<FailureIndex>> {
+    fn row_is_valid(row: &Vec<i32>) -> bool {
         let first = row[0];
         let last = row[row.len() - 1];
         let is_increasing = first < last;
@@ -83,55 +74,34 @@ impl DayTwo {
 
             // calulate disqualifying conditions
             let next_val = row[i + 1];
-            match Self::evaluate_next(i, v, &next_val, is_increasing) {
-                FailureIndexPos::Next => return Err(vec![i + 1]),
-                FailureIndexPos::Current => return Err(vec![i]),
-                FailureIndexPos::CurrentOrNext => return Err(vec![i, i + 1]),
-                FailureIndexPos::None => (),
+            match Self::is_next_valid(v, &next_val, is_increasing) {
+                true => (),
+                false => return false
             }
-
-            // match Self::evaluate_next(i, v, &next_val, is_increasing) {
-            //     FailureIndexPos::Next => {
-            //         println!("Failed on Next: {:?}", row);
-            //         return Err(vec![i + 1]);
-            //     },
-            //     FailureIndexPos::Current => {
-            //         println!("Failed on Current: {:?}", row);
-            //         return Err(vec![i]);
-            //     },
-            //     FailureIndexPos::CurrentOrNext => {
-            //         println!("Failed on CurrentAndNext: {:?}", row);
-            //         return Err(vec![i, i + 1]);
-            //     },
-            //     FailureIndexPos::None => (),
-            // }
         }
 
-        return Ok(());
+        return true;
     }
 
-    fn evaluate_next(index: usize, current: &i32, next: &i32, is_increasing: bool) -> FailureIndexPos {
+    fn is_next_valid(current: &i32, next: &i32, is_increasing: bool) -> bool {
         let diff = current.abs_diff(*next);
         const MIN_DIFF: u32 = 1;
         const MAX_DIFF: u32 = 3;
 
         if diff < MIN_DIFF || diff > MAX_DIFF {
-            // if index == 0 {
-            //     return FailureIndexPos::CurrentOrNext
-            // }
-            return FailureIndexPos::Current
+            return false;
         }
 
         if is_increasing {
             if current > next {
-                return FailureIndexPos::Next
+                return false;
             }
-            return FailureIndexPos::None
+            return true;
         } else {
             if current < next {
-                return FailureIndexPos::Next
+                return false;
             }
-            return FailureIndexPos::None
+            return true;
         }
     }
 }
@@ -180,13 +150,13 @@ mod tests {
         panic!("Expected integer type")
     }
 
-    // #[test]
+    #[test]
     fn day2_pt2_full_sample_input_test() {
         let day_two = DayTwo::new("./inputs/day2/full");
         let answer = day_two.process_pt2();
 
         if let AdventReturn::Integer(i) = answer {
-            assert_eq!(334, i,);
+            assert_eq!(354, i,);
             return;
         }
 
